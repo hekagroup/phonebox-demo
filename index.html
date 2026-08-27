@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhoneBox — Catalogue (démo)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; background: #fff; color: #333; }
+        .header { background: #fdf0f3; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #c0305a; gap: 10px; flex-wrap: wrap; }
+        .logo { display: flex; align-items: center; }
+        .logo img { height: 80px; object-fit: contain; }
+        .header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .lang-switcher { display: flex; gap: 8px; }
+        .lang-btn { padding: 6px 10px; border: 2px solid #c0305a; background: white; color: #c0305a; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.3s; }
+        .lang-btn.active { background: #c0305a; color: white; }
+        .contact-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .contact-btn { background: #c0305a; color: white; padding: 8px 12px; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; font-size: 12px; text-decoration: none; transition: all 0.3s; }
+        .contact-btn:hover { background: #a02349; }
+        .hero { background: linear-gradient(135deg, #fdf0f3 0%, #fce4ec 100%); padding: 30px 20px; text-align: center; border-bottom: 3px solid #c0305a; }
+        .hero h1 { font-size: 36px; color: #c0305a; margin-bottom: 10px; }
+        .hero p { font-size: 14px; color: #666; margin-bottom: 15px; line-height: 1.4; }
+        .hero-info { background: #c0305a; color: white; padding: 12px 15px; border-radius: 10px; display: inline-block; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+        .delivery-info { background: #fff3cd; color: #856404; padding: 12px 15px; border-radius: 10px; display: inline-block; font-size: 12px; font-weight: 600; border: 1px solid #ffc107; }
+        .filters { padding: 20px 10px; text-align: center; background: #fff; border-bottom: 1px solid #f0f0f0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .filter-btn { display: inline-block; padding: 8px 14px; margin: 4px; border: 2px solid #c0305a; background: white; color: #c0305a; border-radius: 20px; cursor: pointer; font-weight: 600; transition: all 0.3s; font-size: 12px; white-space: nowrap; }
+        .filter-btn:hover, .filter-btn.active { background: #c0305a; color: white; }
+        .products-container { max-width: 1200px; margin: 0 auto; padding: 20px 10px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .product-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(192,48,90,0.15); }
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100px); opacity: 0; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .product-image { width: 100%; height: 180px; object-fit: cover; background: #f5f5f5; cursor: zoom-in; }
+        .product-info { padding: 12px; }
+        .product-name { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; line-height: 1.3; min-height: 26px; }
+        .product-stock { font-size: 11px; color: #27ae60; font-weight: 600; margin-bottom: 8px; }
+        .product-stock.low { color: #e74c3c; }
+        .price-section { margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+        .price { font-size: 15px; color: #c0305a; font-weight: 700; white-space: nowrap; }
+        .original-price { font-size: 11px; color: #999; text-decoration: line-through; white-space: nowrap; }
+        .discount-badge { background: #c0305a; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+        .buttons-group { display: flex; gap: 6px; }
+        .contact-product-btn { flex: 1; padding: 10px 6px; background: #c0305a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.3s; min-height: 36px; }
+        .contact-product-btn:hover:not(:disabled) { background: #a02349; }
+        .contact-product-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #999; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { max-width: 90vw; width: 100%; max-height: 80vh; background: white; border-radius: 12px; padding: 15px; position: relative; overflow: auto; }
+        .close-modal { position: absolute; top: 10px; right: 10px; font-size: 24px; cursor: pointer; color: #c0305a; background: none; border: none; }
+        .modal-image { width: 100%; border-radius: 8px; }
+        .conditions { background: #fdf0f3; padding: 30px 15px; border-top: 3px solid #c0305a; margin-top: 30px; }
+        .conditions-content { max-width: 1000px; margin: 0 auto; }
+        .conditions h2 { color: #c0305a; margin-bottom: 15px; font-size: 20px; }
+        .conditions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .condition-item { background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #c0305a; }
+        .condition-item h3 { color: #c0305a; margin-bottom: 8px; font-size: 14px; }
+        .condition-item p { font-size: 12px; color: #666; line-height: 1.5; }
+        .contact-info { background: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 15px; }
+        .contact-info h3 { color: #c0305a; margin-bottom: 12px; font-size: 16px; }
+        .contact-method { margin: 10px 0; padding: 8px; background: #fdf0f3; border-radius: 6px; font-size: 12px; }
+        .contact-method strong { color: #c0305a; }
+        .contact-method a { color: #c0305a; text-decoration: none; font-weight: 600; }
+        @media (max-width: 768px) { .hero h1 { font-size: 28px; } .products-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; } .header { padding: 12px 15px; } }
+        .loader { text-align: center; padding: 40px; color: #c0305a; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid #c0305a; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Styles timer réutilisés */
+        .timer-box { background: rgba(255, 255, 255, 0.2); padding: 12px 16px; border-radius: 10px; min-width: 70px; backdrop-filter: blur(10px); }
+        .timer-value { display: block; font-size: 24px; font-weight: 700; color: white; line-height: 1; }
+        .timer-label { display: block; font-size: 11px; color: #fce4ec; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .timer-separator { color: white; font-size: 20px; font-weight: 700; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    </style>
+</head>
+<body>
+    <div style="background: #c0305a; color: white; padding: 12px 20px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; align-items: center;">
+        <span style="font-weight: 600;">🎭 Site de démonstration — aucune donnée réelle</span>
+    </div>
+    <div class="header">
+        <div class="logo" style="font-size:44px;line-height:1">📱</div>
+        <div class="header-right">
+            <div class="lang-switcher">
+                <button class="lang-btn active" data-lang="fr">FR</button>
+                <button class="lang-btn" data-lang="mg">MG</button>
+            </div>
+            <div class="contact-buttons" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="#" class="contact-btn" onclick="return demoContactAlert(event)" title="Contact (démo)">
+                    💬 Contact
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1 data-fr="📱 Nos Téléphones" data-mg="📱 Ny finday ato aminay">📱 Nos Téléphones</h1>
+        <p data-fr="Retrait en point relais en centre-ville • Paiement avant livraison"
+           data-mg="Toerana afovoan-tanana • Alohavy alohan'ny livraison">
+            Retrait en point relais en centre-ville • Paiement avant livraison
+        </p>
+        <!-- Section "Pour commander:" masquée -->
+        <div class="delivery-info">
+            🎯 Point relais en centre-ville • Livraison à domicile • 📍 Adresse exacte fournie après commande
+        </div>
+    </div>
+
+    <div class="filters" id="filters-container">
+        <button class="filter-btn active" data-category="all" data-fr="Tous" data-mg="Rehetra">Tous</button>
+    </div>
+
+    <div class="products-container">
+        <div id="products-grid" class="products-grid">
+            <div class="loader">
+                <div class="loading"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="conditions">
+        <div class="conditions-content">
+            <h2 data-fr="Conditions de Vente" data-mg="Ankamantatra Nivarotana">Conditions de Vente</h2>
+            <div class="conditions-grid">
+                <div class="condition-item">
+                    <h3 data-fr="💳 Paiement" data-mg="💳 Karamihan">💳 Paiement</h3>
+                    <p data-fr="Paiement mobile money AVANT livraison"
+                       data-mg="Karamihan alohan'ny aloa">
+                        Paiement mobile money avant livraison
+                    </p>
+                </div>
+                <div class="condition-item">
+                    <h3 data-fr="🚚 Livraison" data-mg="🚚 Fandaloan">🚚 Livraison</h3>
+                    <p data-fr="Point Relais en centre-ville • Retrait en mains propres"
+                       data-mg="Toerana fandaloan afovoan-tanana">
+                        Centre-ville uniquement
+                    </p>
+                </div>
+                <div class="condition-item">
+                    <h3 data-fr="📞 Contact" data-mg="📞 Famatoran">📞 Contact</h3>
+                    <p data-fr="Via messagerie (réponse rapide)"
+                       data-mg="Amin'ny hafatra">
+                        Messagerie
+                    </p>
+                </div>
+            </div>
+            <div class="contact-info">
+                <h3 data-fr="📱 Contactez-nous" data-mg="📱 Makipitsipitsy">📱 Contactez-nous</h3>
+                <div class="contact-method">
+                    💬 <strong>Démo :</strong> le bouton "Demander le prix" simule un message, sans rien envoyer.
+                </div>
+                <div class="contact-method">
+                    📍 <strong>Point Relais:</strong> Centre-ville
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <img class="modal-image" id="modalImage" src="" alt="">
+        </div>
+    </div>
+
+    <script>
+        // ===== DÉMO : pas de tracking, pas de backend =====
+        function trackEvent() {}
+        function demoContactAlert(e){
+          e.preventDefault();
+          alert('Démo — aucun message n\'est réellement envoyé.');
+          return false;
+        }
+    </script>
+
+    <script>
+        // ===== CODE ORIGINAL =====
+
+        let currentLang = 'fr';
+        let allProducts = [];
+        let filteredProducts = [];
+        let selectedCategory = 'all';
+        let precommandeParPid = {};
+
+        // ===== DÉMO : catalogue figé, 5 téléphones, aucun backend =====
+        const DEMO_PRODUCTS = [
+            {id:'PH1',nom:'iPhone 14 Pro 128 Go',cat:'Smartphones',stk:6,archived:false,photo:null},
+            {id:'PH2',nom:'Samsung Galaxy S23',cat:'Smartphones',stk:4,archived:false,photo:null},
+            {id:'PH3',nom:'Xiaomi Redmi Note 12',cat:'Smartphones',stk:27,archived:false,photo:null},
+            {id:'PH4',nom:'Google Pixel 7',cat:'Smartphones',stk:3,archived:false,photo:null},
+            {id:'PH5',nom:'Chargeur rapide + Coque de protection',cat:'Accessoires',stk:42,archived:false,photo:null}
+        ];
+        const DEMO_PRECOMMANDE = {PH1:4};
+
+        function thumbUrl(url, width, height) {
+            if (!url) return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="#fdf0f3"/><text x="50%" y="50%" font-size="60" text-anchor="middle" dominant-baseline="central">📱</text></svg>`);
+            return url;
+        }
+
+        function scrollToProduct(productName) {
+            // Chercher et scroller vers le produit spécifié
+            const productElements = document.querySelectorAll('.product-name');
+            for (let elem of productElements) {
+                if (elem.textContent.trim() === productName) {
+                    elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Ajouter une animation visuelle
+                    const card = elem.closest('.product-card');
+                    if (card) {
+                        card.style.animation = 'pulse 0.5s';
+                    }
+                    return;
+                }
+            }
+        }
+
+        function openImageModal(imageSrc) {
+            // Afficher l'image en grand dans la modal
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            if (modal && modalImage) {
+                modalImage.src = imageSrc;
+                modal.classList.add('active');
+            }
+        }
+
+        async function init() {
+            await fetchProducts();
+            setupLanguageSwitcher();
+            setupFilters();
+            setupModal();
+        }
+
+        async function fetchProducts() {
+            allProducts = DEMO_PRODUCTS.filter(p => !p.archived);
+            precommandeParPid = DEMO_PRECOMMANDE;
+            extractCategories();
+            filterAndDisplay();
+        }
+
+        function extractCategories() {
+            const categories = [...new Set(allProducts.map(p => p.cat))].filter(Boolean);
+            const filtersContainer = document.getElementById('filters-container');
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.dataset.category = cat;
+                btn.textContent = cat;
+                btn.addEventListener('click', () => filterByCategory(cat, btn));
+                filtersContainer.appendChild(btn);
+            });
+        }
+
+        function filterByCategory(category, btn) {
+            selectedCategory = category;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterAndDisplay();
+        }
+
+        function setupFilters() {
+            const allBtn = document.querySelector('[data-category="all"]');
+            if (allBtn) {
+                allBtn.addEventListener('click', () => filterByCategory('all', allBtn));
+            }
+        }
+
+        function filterAndDisplay() {
+            if (selectedCategory === 'all') {
+                filteredProducts = allProducts;
+            } else {
+                filteredProducts = allProducts.filter(p => p.cat === selectedCategory);
+            }
+            displayProducts();
+        }
+
+        function displayProducts() {
+            const grid = document.getElementById('products-grid');
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 20px;">Aucun produit</p>';
+                return;
+            }
+            grid.innerHTML = filteredProducts.map(product => {
+                const enPrecommande = product.stk <= 0 && (precommandeParPid[product.id] || 0) > 0;
+                return `
+                <div class="product-card">
+                    <img src="${thumbUrl(product.photo, 400, 450)}" alt="${product.nom}" class="product-image" loading="lazy" ${product.photo ? `onclick="openImageModal('${product.photo}')"` : ''}>
+                    <div class="product-info">
+                        <div class="product-name">${product.nom}</div>
+                        <div class="product-stock ${product.stk <= 0 ? 'low' : ''}">
+                            ${product.stk > 0 ? (product.stk <= 5 ? (currentLang === 'fr' ? `🔴 Il ne reste que ${product.stk}` : `🔴 ${product.stk} sisa`) : (currentLang === 'fr' ? `📦 ${product.stk} disponible${product.stk > 1 ? 's' : ''}` : `📦 ${product.stk} misy`)) : (enPrecommande ? (currentLang === 'fr' ? '🕐 Bientôt disponible' : '🕐 Ho avy tsy ho ela') : (currentLang === 'fr' ? '❌ Rupture de stock' : '❌ Lany'))}
+                        </div>
+                        <div style="font-size: 11px; color: #666; margin-bottom: 8px;">
+                            ${currentLang === 'fr' ? `✅ ${Math.floor(Math.random() * (750 - 250 + 1)) + 250} vendu${Math.floor(Math.random() * (750 - 250 + 1)) + 250 > 1 ? 's' : ''}` : `✅ Nahalafo ${Math.floor(Math.random() * (750 - 250 + 1)) + 250}`}
+                        </div>
+                        <div class="price-section">
+                            <!-- Prix masqué pour le catalogue -->
+                        </div>
+                        <div class="buttons-group">
+                            ${(product.stk > 0 || enPrecommande) ? `
+                                <button class="contact-product-btn" onclick="commanderAvecPhoto('${product.id}', '${product.nom}', '${product.photo || ''}', '${enPrecommande ? (currentLang === 'fr' ? 'Précommande' : 'Precommande') : ''}')" title="Demander le prix" style="cursor: pointer;">
+                                    ${enPrecommande ? (currentLang === 'fr' ? '🕐 Précommander' : '🕐 Precommande') : '💬 Demander le prix'}
+                                </button>
+                            ` : `
+                                <button class="contact-product-btn" disabled style="opacity: 0.5; cursor: not-allowed; background: #999;">
+                                    ❌ Rupture de stock
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('fr-FR').format(price);
+        }
+
+        function calculateDiscount(prix, prixBarre) {
+            return Math.round(((prixBarre - prix) / prixBarre) * 100);
+        }
+
+        function setupLanguageSwitcher() {
+            document.querySelectorAll('[data-lang]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentLang = btn.dataset.lang;
+                    document.querySelectorAll('[data-lang]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateLanguage();
+                });
+            });
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-fr][data-mg]').forEach(element => {
+                element.textContent = element.dataset[currentLang];
+            });
+        }
+
+        function setupModal() {
+            const modal = document.getElementById('imageModal');
+            const closeBtn = document.querySelector('.close-modal');
+            closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('active');
+            });
+        }
+
+
+        function openMessenger(message, productPhoto) {
+            // Démo : toujours la modal, jamais d'ouverture réelle de Messenger.
+            showMessageModal(message, null, productPhoto);
+        }
+
+        function showMessageModal(message, messengerUrl, productPhoto) {
+            // Créer overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'message-modal-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 16px;
+                animation: fadeIn 0.3s ease-out;
+            `;
+            
+            // Créer modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                border-radius: 16px;
+                padding: 24px;
+                max-width: 400px;
+                width: 100%;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                animation: slideUp 0.3s ease-out;
+                max-height: 90vh;
+                overflow-y: auto;
+            `;
+            
+            // Contenu
+            let imageHtml = '';
+            if (productPhoto) {
+                imageHtml = `
+                    <div style="margin-bottom: 16px; border-radius: 12px; overflow: hidden;">
+                        <img src="${productPhoto}" alt="Produit" style="width: 100%; height: auto; display: block; object-fit: cover;">
+                    </div>
+                `;
+            }
+            
+            modal.innerHTML = `
+                ${imageHtml}
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: #c0305a; font-size: 18px; margin-bottom: 8px;">Message prêt à envoyer</h2>
+                    <p style="color: #888; font-size: 13px;">Démo — rien n'est réellement envoyé</p>
+                </div>
+
+                <div style="background: #f5f5f5; border-radius: 12px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #c0305a; max-height: 250px; overflow-y: auto;">
+                    <p style="color: #333; font-size: 14px; white-space: pre-wrap; line-height: 1.6; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">${escapeHtml(message)}</p>
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-direction: column;">
+                    <button id="btn-copy-open" style="
+                        width: 100%;
+                        padding: 14px;
+                        background: #c0305a;
+                        color: white;
+                        border: none;
+                        border-radius: 10px;
+                        font-size: 15px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-family: inherit;
+                    ">
+                        ✅ Copier le message
+                    </button>
+                    <button id="btn-cancel-modal" style="
+                        width: 100%;
+                        padding: 14px;
+                        background: #f0f0f0;
+                        color: #666;
+                        border: none;
+                        border-radius: 10px;
+                        font-size: 15px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-family: inherit;
+                    ">
+                        Annuler
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Event listeners
+            document.getElementById('btn-copy-open').onclick = () => {
+                navigator.clipboard.writeText(message).then(() => {
+                    overlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+                    setTimeout(() => document.body.removeChild(overlay), 300);
+                });
+            };
+            
+            document.getElementById('btn-cancel-modal').onclick = () => {
+                overlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+                setTimeout(() => document.body.removeChild(overlay), 300);
+            };
+            
+            // Fermer au clic sur overlay
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    overlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+                    setTimeout(() => document.body.removeChild(overlay), 300);
+                }
+            };
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function commanderAvecPhoto(productId, productNom, productPhoto, note) {
+            // Message malagasy - texte seul (sans lien, sans prix)
+            const suffixe = note ? `\n\n(${note})` : '';
+            const message = `Interese amin'ity\n\n✨ ${productNom.toUpperCase()} ✨\n\ndia ohatr'inona ny fidiny azafady${suffixe}`;
+
+            openMessenger(message, productPhoto);
+            trackEvent('click_commander', productId);
+        }
+
+        init();
+    </script>
+</body>
+</html>
